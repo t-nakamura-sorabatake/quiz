@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理者ページ | 宇宙ビジネス偏差値クイズ</title>
+<meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #141a2e; --panel2: #1c2440;
+    --accent: #4f8ef7; --text: #e8ecf5; --sub: #8a93ad;
+    --ok: #3ecf8e; --ng: #f75f5f; --warn: #f7b84f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 1.3rem; margin-bottom: 16px; }
+  h2 { font-size: 1.05rem; margin: 20px 0 10px; }
+  .card { background: var(--panel); border: 1px solid #2a3355; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 8px;
+         padding: 9px 16px; font-size: .9rem; font-weight: bold; cursor: pointer; }
+  .btn.ok { background: var(--ok); }
+  .btn.ng { background: var(--ng); }
+  .btn.sub { background: var(--panel2); color: var(--text); border: 1px solid #3a4570; }
+  .btn:hover { opacity: .85; }
+  input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #3a4570;
+          background: var(--panel2); color: var(--text); font-size: 1rem; margin-bottom: 12px; }
+  label { display: block; font-size: .8rem; color: var(--sub); margin-bottom: 4px; }
+  .hidden { display: none !important; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid #232c4d; text-align: left; vertical-align: top; }
+  th { color: var(--sub); font-weight: normal; cursor: pointer; white-space: nowrap; }
+  .tab-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .badge { display: inline-block; border-radius: 12px; padding: 1px 10px; font-size: .75rem; }
+  .badge.easy { background: #16321f; color: var(--ok); }
+  .badge.hard { background: #3a1a1a; color: var(--ng); }
+  .badge.mid  { background: var(--panel2); color: var(--sub); }
+  .qbox { font-size: .9rem; line-height: 1.7; }
+  .qbox .meta { color: var(--sub); font-size: .8rem; margin: 6px 0; }
+  .choice-list { margin: 8px 0 8px 1em; font-size: .85rem; }
+  .choice-list li.ans { color: var(--ok); font-weight: bold; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  .note { color: var(--sub); font-size: .8rem; margin: 8px 0; line-height: 1.7; }
+  .error-box { background: #3a1a1a; border: 1px solid var(--ng); border-radius: 8px; padding: 12px; font-size: .85rem; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛰️ 管理者ページ</h1>
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <!-- ログイン -->
+  <div id="screen-login" class="card">
+    <label>メールアドレス</label>
+    <input type="email" id="email" autocomplete="username">
+    <label>パスワード</label>
+    <input type="password" id="password" autocomplete="current-password">
+    <button class="btn" onclick="login()">ログイン</button>
+    <p class="note">Supabase の Authentication で作成した管理者アカウントでログインしてください。</p>
+  </div>
+
+  <!-- 管理画面 -->
+  <div id="screen-admin" class="hidden">
+    <div class="tab-row">
+      <button class="btn sub" id="tabPending" onclick="showTab('pending')">承認待ち</button>
+      <button class="btn sub" id="tabStats" onclick="showTab('stats')">問題一覧・統計</button>
+      <button class="btn sub" onclick="logout()" style="margin-left:auto;">ログアウト</button>
+    </div>
+
+    <!-- 承認待ち -->
+    <div id="tab-pending">
+      <h2>承認待ちの投稿クイズ</h2>
+      <div id="pendingList"></div>
+    </div>
+
+    <!-- 統計 -->
+    <div id="tab-stats" class="hidden">
+      <h2>問題一覧・正答率・評価</h2>
+      <p class="note">
+        正答率 <b style="color:var(--ok)">90%以上</b> は易しすぎ、<b style="color:var(--ng)">30%以下</b> は難しすぎの可能性があります。<br>
+        「難易度」列のプルダウンで変更するとその場で保存されます。「非公開」で出題から外せます。
+      </p>
+      <div class="card" style="overflow-x:auto;">
+        <table id="statsTable">
+          <thead>
+            <tr>
+              <th onclick="sortStats('theme_name')">テーマ</th>
+              <th>問題</th>
+              <th onclick="sortStats('attempts')">回答数▼</th>
+              <th onclick="sortStats('correct_rate')">正答率▼</th>
+              <th onclick="sortStats('fun_rate')">😀率▼</th>
+              <th>難易度</th>
+              <th>状態</th>
+            </tr>
+          </thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+function showError(msg) {
+  $("errorBox").textContent = msg;
+  $("errorBox").classList.remove("hidden");
+  setTimeout(() => $("errorBox").classList.add("hidden"), 6000);
+}
+
+// ===== 認証 =====
+async function login() {
+  const { error } = await sb.auth.signInWithPassword({
+    email: $("email").value, password: $("password").value
+  });
+  if (error) { showError("ログインに失敗しました: " + error.message); return; }
+  enter();
+}
+async function logout() { await sb.auth.signOut(); location.reload(); }
+
+async function enter() {
+  $("screen-login").classList.add("hidden");
+  $("screen-admin").classList.remove("hidden");
+  showTab("pending");
+}
+sb.auth.getSession().then(({ data }) => { if (data.session) enter(); });
+
+function showTab(name) {
+  $("tab-pending").classList.toggle("hidden", name !== "pending");
+  $("tab-stats").classList.toggle("hidden", name !== "stats");
+  if (name === "pending") loadPending();
+  if (name === "stats") loadStats();
+}
+
+// ===== 承認待ち =====
+async function loadPending() {
+  const { data, error } = await sb
+    .from("questions")
+    .select("*, themes(name)")
+    .eq("status", "pending")
+    .order("created_at");
+  if (error) { showError("読み込みに失敗しました: " + error.message); return; }
+
+  const box = $("pendingList");
+  box.innerHTML = "";
+  if (!data || data.length === 0) {
+    box.innerHTML = '<div class="card note">承認待ちの投稿はありません。</div>';
+    return;
+  }
+  data.forEach(q => {
+    const div = document.createElement("div");
+    div.className = "card qbox";
+    const choices = q.choices.map((c, i) =>
+      `<li class="${i === q.correct_index ? 'ans' : ''}">${esc(c)}${i === q.correct_index ? " ← 正解" : ""}</li>`).join("");
+    div.innerHTML = `
+      <div class="meta">テーマ: ${esc(q.themes?.name || "")} / 投稿者: ${esc(q.contributor || "匿名")} / ${new Date(q.created_at).toLocaleString("ja-JP")}</div>
+      <b>${esc(q.question)}</b>
+      <ol class="choice-list">${choices}</ol>
+      <div class="meta">解説: ${esc(q.explanation || "(なし)")}</div>
+      <div class="meta">出典: ${q.source_url ? `<a href="${esc(q.source_url)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(q.source_title || q.source_url)}</a>` : esc(q.source_title || "(なし)")}</div>
+      <div class="btn-row">
+        <button class="btn ok" onclick="setStatus(${q.id}, 'approved')">✔ 承認して出題する</button>
+        <button class="btn ng" onclick="setStatus(${q.id}, 'rejected')">✖ 却下</button>
+      </div>`;
+    box.appendChild(div);
+  });
+}
+
+async function setStatus(id, status) {
+  const { error } = await sb.from("questions").update({ status }).eq("id", id);
+  if (error) { showError("更新に失敗しました: " + error.message); return; }
+  loadPending();
+}
+
+// ===== 統計 =====
+let statsData = [];
+let sortKey = "attempts", sortAsc = false;
+
+async function loadStats() {
+  const { data, error } = await sb.from("question_stats").select("*");
+  if (error) { showError("統計の読み込みに失敗しました: " + error.message); return; }
+  statsData = (data || []).map(r => ({
+    ...r,
+    fun_rate: r.rating_count > 0 ? Math.round(100 * r.fun_count / r.rating_count) : null
+  }));
+  renderStats();
+}
+
+function sortStats(key) {
+  if (sortKey === key) sortAsc = !sortAsc; else { sortKey = key; sortAsc = false; }
+  renderStats();
+}
+
+function renderStats() {
+  const rows = [...statsData].sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === "string") return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va - vb : vb - va;
+  });
+  const tbody = $("statsBody");
+  tbody.innerHTML = "";
+  rows.forEach(r => {
+    const rateBadge = r.correct_rate == null ? '<span class="badge mid">-</span>'
+      : r.correct_rate >= 90 ? `<span class="badge easy">${r.correct_rate}%</span>`
+      : r.correct_rate <= 30 ? `<span class="badge hard">${r.correct_rate}%</span>`
+      : `<span class="badge mid">${r.correct_rate}%</span>`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${esc(r.theme_name)}</td>
+      <td>${esc(r.question)}</td>
+      <td>${r.attempts}</td>
+      <td>${rateBadge}</td>
+      <td>${r.fun_rate == null ? "-" : r.fun_rate + "%"} <span style="color:var(--sub)">(${r.rating_count}票)</span></td>
+      <td>
+        <select onchange="updateDifficulty(${r.id}, this.value)">
+          ${[1,2,3].map(d => `<option value="${d}" ${r.difficulty === d ? "selected" : ""}>${["易","普","難"][d-1]}</option>`).join("")}
+        </select>
+      </td>
+      <td>
+        <select onchange="updateStatus(${r.id}, this.value)">
+          <option value="approved" ${r.status === "approved" ? "selected" : ""}>公開</option>
+          <option value="rejected" ${r.status === "rejected" ? "selected" : ""}>非公開</option>
+          <option value="pending" ${r.status === "pending" ? "selected" : ""}>承認待ち</option>
+        </select>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateDifficulty(id, val) {
+  const { error } = await sb.from("questions").update({ difficulty: parseInt(val) }).eq("id", id);
+  if (error) showError("更新に失敗しました: " + error.message);
+}
+async function updateStatus(id, val) {
+  const { error } = await sb.from("questions").update({ status: val }).eq("id", id);
+  if (error) showError("更新に失敗しました: " + error.message);
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+</script>
+</body>
+</html>

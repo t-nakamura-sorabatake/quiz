@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宇宙ビジネス偏差値クイズ</title>
+<meta name="description" content="宇宙ビジネスの知識を50問のクイズでテスト!あなたの宇宙ビジネス偏差値と称号を判定します。">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #141a2e;
+    --panel2: #1c2440;
+    --accent: #4f8ef7;
+    --accent2: #f7b84f;
+    --text: #e8ecf5;
+    --sub: #8a93ad;
+    --ok: #3ecf8e;
+    --ng: #f75f5f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    background: var(--bg);
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff8 0, transparent 100%),
+      radial-gradient(1px 1px at 70% 60%, #fff6 0, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 80%, #fff7 0, transparent 100%),
+      radial-gradient(1px 1px at 85% 15%, #fff5 0, transparent 100%),
+      radial-gradient(1px 1px at 10% 70%, #fff6 0, transparent 100%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 1.5rem; text-align: center; margin-bottom: 4px; }
+  .tagline { text-align: center; color: var(--sub); font-size: .85rem; margin-bottom: 24px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid #2a3355;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .btn {
+    display: inline-block; width: 100%;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 14px 18px; font-size: 1rem; font-weight: bold;
+    cursor: pointer; transition: opacity .15s;
+    text-align: center; text-decoration: none;
+  }
+  .btn:hover { opacity: .85; }
+  .btn.sub { background: var(--panel2); color: var(--text); border: 1px solid #3a4570; }
+  .btn.small { width: auto; padding: 8px 16px; font-size: .85rem; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  input[type=text], select, textarea {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid #3a4570; background: var(--panel2);
+    color: var(--text); font-size: 1rem; margin-bottom: 12px;
+  }
+  label { display: block; font-size: .8rem; color: var(--sub); margin-bottom: 4px; }
+  .hidden { display: none !important; }
+
+  /* quiz */
+  .progress-bar { height: 6px; background: var(--panel2); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .qmeta { display: flex; justify-content: space-between; font-size: .8rem; color: var(--sub); margin-bottom: 14px; }
+  .theme-badge { background: var(--panel2); border: 1px solid #3a4570; border-radius: 20px; padding: 2px 12px; }
+  .qtext { font-size: 1.05rem; line-height: 1.7; margin-bottom: 18px; font-weight: bold; }
+  .choice {
+    display: block; width: 100%; text-align: left;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid #3a4570; border-radius: 10px;
+    padding: 13px 16px; font-size: .95rem; margin-bottom: 10px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .choice:hover { border-color: var(--accent); }
+  .choice.correct { border-color: var(--ok); background: #16321f; }
+  .choice.wrong { border-color: var(--ng); background: #3a1a1a; }
+  .choice:disabled { cursor: default; }
+
+  .verdict { font-size: 1.3rem; font-weight: bold; margin-bottom: 8px; }
+  .verdict.ok { color: var(--ok); }
+  .verdict.ng { color: var(--ng); }
+  .explanation { font-size: .9rem; line-height: 1.8; color: #c6cde0; margin-bottom: 10px; }
+  .source a { color: var(--accent); font-size: .85rem; }
+  .rate-row { display: flex; gap: 8px; align-items: center; margin: 14px 0; font-size: .85rem; color: var(--sub); flex-wrap: wrap; }
+  .rate-btn {
+    background: var(--panel2); border: 1px solid #3a4570; color: var(--text);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer; font-size: .85rem;
+  }
+  .rate-btn.active { border-color: var(--accent2); color: var(--accent2); }
+  .stat-chip { font-size: .8rem; color: var(--sub); margin-bottom: 10px; }
+
+  /* result */
+  .result-dev { font-size: 3.2rem; font-weight: bold; text-align: center; color: var(--accent2); }
+  .result-title { font-size: 1.5rem; font-weight: bold; text-align: center; margin: 6px 0 2px; }
+  .result-sub { text-align: center; color: var(--sub); font-size: .9rem; margin-bottom: 18px; }
+  .share-row { display: flex; flex-direction: column; gap: 10px; }
+  .theme-scores { font-size: .85rem; margin-top: 16px; }
+  .theme-scores div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #232c4d; }
+
+  footer { text-align: center; margin-top: 30px; font-size: .75rem; color: var(--sub); }
+  footer a { color: var(--sub); }
+  .error-box { background: #3a1a1a; border: 1px solid var(--ng); border-radius: 8px; padding: 12px; font-size: .85rem; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚀 宇宙ビジネス偏差値クイズ</h1>
+  <p class="tagline">あなたの宇宙ビジネス力を偏差値で判定!</p>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <!-- ===== スタート画面 ===== -->
+  <div id="screen-start" class="card">
+    <label>ニックネーム(任意)</label>
+    <input type="text" id="nickname" maxlength="20" placeholder="例: そらまめ">
+    <button class="btn" onclick="startQuiz(QUIZ_SIZE)">本気モードに挑戦(50問)</button>
+    <div style="height:10px"></div>
+    <button class="btn sub" onclick="startQuiz(TRIAL_SIZE)">お試しモード(10問)</button>
+    <div style="height:20px"></div>
+    <button class="btn sub" onclick="showSuggest()">💡 クイズを投稿する</button>
+  </div>
+
+  <!-- ===== クイズ画面 ===== -->
+  <div id="screen-quiz" class="card hidden">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="qmeta">
+      <span id="qNum"></span>
+      <span class="theme-badge" id="qTheme"></span>
+    </div>
+    <p class="qtext" id="qText"></p>
+    <div id="choices"></div>
+
+    <div id="reveal" class="hidden">
+      <p class="verdict" id="verdict"></p>
+      <p class="stat-chip" id="rateChip"></p>
+      <p class="explanation" id="qExplanation"></p>
+      <p class="source" id="qSource"></p>
+      <div class="rate-row">
+        <span>この問題は…</span>
+        <button class="rate-btn" id="funBtn" onclick="rateQuestion(true)">😀 面白い</button>
+        <button class="rate-btn" id="notFunBtn" onclick="rateQuestion(false)">😐 いまいち</button>
+      </div>
+      <button class="btn" id="nextBtn" onclick="nextQuestion()">次の問題へ →</button>
+    </div>
+  </div>
+
+  <!-- ===== 結果画面 ===== -->
+  <div id="screen-result" class="card hidden">
+    <p class="result-sub">あなたの宇宙ビジネス偏差値は…</p>
+    <p class="result-dev" id="resultDev"></p>
+    <p class="result-title" id="resultTitle"></p>
+    <p class="result-sub" id="resultDetail"></p>
+    <div class="share-row">
+      <a class="btn" id="shareX" target="_blank" rel="noopener">𝕏 で結果をシェア</a>
+      <button class="btn sub" id="shareNative" onclick="nativeShare()">📤 その他の方法でシェア</button>
+      <button class="btn sub" onclick="location.reload()">🔁 もう一度挑戦</button>
+      <button class="btn sub" onclick="showSuggest()">💡 クイズを投稿する</button>
+    </div>
+    <div class="theme-scores" id="themeScores"></div>
+  </div>
+
+  <!-- ===== クイズ投稿画面 ===== -->
+  <div id="screen-suggest" class="card hidden">
+    <h2 style="font-size:1.1rem; margin-bottom:14px;">💡 クイズを投稿する</h2>
+    <p style="font-size:.8rem; color:var(--sub); margin-bottom:14px;">
+      投稿されたクイズは管理者の承認後に出題されます。出典が確認できる問題を歓迎します!
+    </p>
+    <label>テーマ</label>
+    <select id="sgTheme"></select>
+    <label>問題文</label>
+    <textarea id="sgQuestion" rows="3" placeholder="例: 日本初の月面着陸に成功した探査機は?"></textarea>
+    <label>選択肢1(これが正解になります)</label>
+    <input type="text" id="sgC0" placeholder="正解の選択肢">
+    <label>選択肢2</label>
+    <input type="text" id="sgC1">
+    <label>選択肢3</label>
+    <input type="text" id="sgC2">
+    <label>選択肢4</label>
+    <input type="text" id="sgC3">
+    <label>解説(任意)</label>
+    <textarea id="sgExplanation" rows="2"></textarea>
+    <label>出典名(任意)</label>
+    <input type="text" id="sgSourceTitle" placeholder="例: JAXA公式サイト">
+    <label>出典URL(任意)</label>
+    <input type="text" id="sgSourceUrl" placeholder="https://...">
+    <label>お名前(任意・承認時に表示される場合があります)</label>
+    <input type="text" id="sgName" maxlength="20">
+    <button class="btn" id="sgSubmit" onclick="submitSuggestion()">投稿する</button>
+    <div style="height:10px"></div>
+    <button class="btn sub" onclick="backToStart()">← 戻る</button>
+  </div>
+
+  <footer>
+    <p>出題内容の正確性には配慮していますが、最新情報は各出典をご確認ください。</p>
+    <p style="margin-top:6px;"><a href="admin.html">管理者ページ</a></p>
+  </footer>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===== 称号マスタ(偏差値の高い順) =====
+const TITLES = [
+  { min: 75, emoji: "🌌", name: "宇宙ビジネスの神",             desc: "もはや人類の知識の限界。宇宙産業はあなたが回している。" },
+  { min: 70, emoji: "🪐", name: "銀河系CEO",                   desc: "宇宙ビジネスの最前線を語れるトップランナー!" },
+  { min: 65, emoji: "🚀", name: "ロケットマスター",             desc: "打上げから法規制まで、死角なしの実力者。" },
+  { min: 60, emoji: "🛰️", name: "コンステレーション司令官",     desc: "宇宙ビジネス上級者。業界人と対等に話せるレベル。" },
+  { min: 55, emoji: "🌕", name: "月面開拓者",                   desc: "平均をしっかり超える知識量。次のフロンティアへ!" },
+  { min: 50, emoji: "👨‍🚀", name: "宇宙飛行士候補生",           desc: "標準以上の宇宙ビジネス力。伸びしろは無限大。" },
+  { min: 45, emoji: "🛸", name: "軌道投入見習い",               desc: "基礎は身についてきた。周回軌道まであと少し!" },
+  { min: 40, emoji: "🌍", name: "射場スタッフ",                 desc: "カウントダウンはこれから。学べば必ず上がれる!" },
+  { min: -999, emoji: "🐣", name: "地上勤務研修生",             desc: "誰もが最初はここから。宇宙への第一歩を踏み出そう!" },
+];
+function getTitle(dev) { return TITLES.find(t => dev >= t.min); }
+
+// ===== 状態 =====
+let sessionId = null;
+let questions = [];   // {id, question, choices, theme_name, displayOrder}
+let current = 0;
+let correctCount = 0;
+let ratedThis = false;
+let themeResult = {}; // theme -> {total, correct}
+
+// ===== ユーティリティ =====
+const $ = id => document.getElementById(id);
+function show(id) {
+  ["screen-start","screen-quiz","screen-result","screen-suggest"].forEach(s => $(s).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+}
+function showError(msg) {
+  $("errorBox").textContent = msg;
+  $("errorBox").classList.remove("hidden");
+  setTimeout(() => $("errorBox").classList.add("hidden"), 6000);
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ===== クイズ開始 =====
+async function startQuiz(num) {
+  try {
+    const { data, error } = await sb.rpc("start_quiz", {
+      p_num: num,
+      p_nickname: $("nickname").value || null
+    });
+    if (error) throw error;
+    sessionId = data.session_id;
+    questions = data.questions || [];
+    if (questions.length === 0) { showError("問題がまだ登録されていません。"); return; }
+    // 選択肢の表示順をシャッフル(正解位置の偏りを防ぐ)
+    questions.forEach(q => {
+      q.displayOrder = shuffle(q.choices.map((_, i) => i));
+    });
+    current = 0; correctCount = 0; themeResult = {};
+    show("screen-quiz");
+    renderQuestion();
+  } catch (e) {
+    console.error(e);
+    showError("クイズの開始に失敗しました。通信環境と config.js の設定をご確認ください。");
+  }
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  ratedThis = false;
+  $("progressFill").style.width = (100 * current / questions.length) + "%";
+  $("qNum").textContent = `第 ${current + 1} 問 / ${questions.length} 問`;
+  $("qTheme").textContent = q.theme_name;
+  $("qText").textContent = q.question;
+  $("reveal").classList.add("hidden");
+  $("funBtn").classList.remove("active");
+  $("notFunBtn").classList.remove("active");
+
+  const box = $("choices");
+  box.innerHTML = "";
+  q.displayOrder.forEach(origIdx => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = q.choices[origIdx];
+    btn.onclick = () => answer(origIdx, btn);
+    box.appendChild(btn);
+  });
+}
+
+async function answer(origIdx, clickedBtn) {
+  const q = questions[current];
+  document.querySelectorAll(".choice").forEach(b => b.disabled = true);
+  try {
+    const { data, error } = await sb.rpc("submit_answer", {
+      p_session_id: sessionId,
+      p_question_id: q.id,
+      p_choice_index: origIdx
+    });
+    if (error) throw error;
+
+    // 正解/不正解の色付け
+    const buttons = document.querySelectorAll(".choice");
+    q.displayOrder.forEach((oi, di) => {
+      if (oi === data.correct_index) buttons[di].classList.add("correct");
+    });
+    if (!data.is_correct) clickedBtn.classList.add("wrong");
+
+    if (data.is_correct) correctCount++;
+    const t = q.theme_name;
+    themeResult[t] = themeResult[t] || { total: 0, correct: 0 };
+    themeResult[t].total++;
+    if (data.is_correct) themeResult[t].correct++;
+
+    $("verdict").textContent = data.is_correct ? "⭕ 正解!" : "❌ 不正解…";
+    $("verdict").className = "verdict " + (data.is_correct ? "ok" : "ng");
+    $("rateChip").textContent = data.correct_rate != null ? `みんなの正答率: ${data.correct_rate}%` : "";
+    $("qExplanation").textContent = data.explanation || "";
+    $("qSource").innerHTML = data.source_url
+      ? `出典: <a href="${data.source_url}" target="_blank" rel="noopener">${data.source_title || data.source_url}</a>`
+      : (data.source_title ? `出典: ${data.source_title}` : "");
+    $("nextBtn").textContent = (current === questions.length - 1) ? "結果を見る 🎉" : "次の問題へ →";
+    $("reveal").classList.remove("hidden");
+    $("reveal").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (e) {
+    console.error(e);
+    showError("回答の送信に失敗しました。");
+    document.querySelectorAll(".choice").forEach(b => b.disabled = false);
+  }
+}
+
+async function rateQuestion(isFun) {
+  const q = questions[current];
+  $("funBtn").classList.toggle("active", isFun);
+  $("notFunBtn").classList.toggle("active", !isFun);
+  try {
+    await sb.rpc("rate_question", {
+      p_session_id: sessionId, p_question_id: q.id, p_is_fun: isFun
+    });
+  } catch (e) { console.error(e); }
+}
+
+function nextQuestion() {
+  if (current === questions.length - 1) { finishQuiz(); return; }
+  current++;
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ===== 結果 =====
+let lastResult = null;
+async function finishQuiz() {
+  try {
+    const { data, error } = await sb.rpc("finish_quiz", { p_session_id: sessionId });
+    if (error) throw error;
+    lastResult = data;
+    const title = getTitle(data.deviation);
+    $("resultDev").textContent = data.deviation;
+    $("resultTitle").textContent = `${title.emoji} ${title.name}`;
+    $("resultDetail").innerHTML =
+      `${data.total}問中 <b>${data.score}問</b> 正解<br>` +
+      `${title.desc}<br>` +
+      `(現在 ${data.participants}人中 ${data.rank}位)`;
+
+    // テーマ別成績
+    const ts = $("themeScores");
+    ts.innerHTML = "<b>テーマ別成績</b>";
+    Object.entries(themeResult).forEach(([name, r]) => {
+      const row = document.createElement("div");
+      row.innerHTML = `<span>${name}</span><span>${r.correct} / ${r.total}</span>`;
+      ts.appendChild(row);
+    });
+
+    // シェア文面
+    const text = `私の宇宙ビジネス偏差値は「${data.deviation}」!\n称号:${title.emoji} ${title.name}\n(${data.total}問中${data.score}問正解)\nあなたも挑戦してみよう🚀\n#宇宙ビジネスクイズ #宇宙ビジネス偏差値`;
+    $("shareX").href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE_URL)}`;
+    show("screen-result");
+    window.scrollTo({ top: 0 });
+  } catch (e) {
+    console.error(e);
+    showError("結果の集計に失敗しました。");
+  }
+}
+
+async function nativeShare() {
+  if (!lastResult) return;
+  const title = getTitle(lastResult.deviation);
+  const text = `私の宇宙ビジネス偏差値は「${lastResult.deviation}」!称号:${title.emoji} ${title.name} #宇宙ビジネスクイズ`;
+  if (navigator.share) {
+    try { await navigator.share({ text, url: SITE_URL }); } catch (e) {}
+  } else {
+    await navigator.clipboard.writeText(text + " " + SITE_URL);
+    showError("シェア文をコピーしました!SNSに貼り付けてください。");
+  }
+}
+
+// ===== クイズ投稿 =====
+async function showSuggest() {
+  show("screen-suggest");
+  const sel = $("sgTheme");
+  if (sel.options.length === 0) {
+    const { data, error } = await sb.from("themes").select("*").order("sort_order");
+    if (!error && data) {
+      data.forEach(t => {
+        const o = document.createElement("option");
+        o.value = t.id; o.textContent = t.name;
+        sel.appendChild(o);
+      });
+    }
+  }
+}
+
+function backToStart() { show("screen-start"); }
+
+async function submitSuggestion() {
+  const cs = [$("sgC0").value, $("sgC1").value, $("sgC2").value, $("sgC3").value].map(s => s.trim());
+  if (!$("sgQuestion").value.trim() || cs.some(c => !c)) {
+    showError("問題文と4つの選択肢をすべて入力してください。");
+    return;
+  }
+  $("sgSubmit").disabled = true;
+  try {
+    const { error } = await sb.rpc("submit_suggestion", {
+      p_theme_id: parseInt($("sgTheme").value),
+      p_question: $("sgQuestion").value.trim(),
+      p_choices: cs,
+      p_correct_index: 0,
+      p_explanation: $("sgExplanation").value.trim() || null,
+      p_source_title: $("sgSourceTitle").value.trim() || null,
+      p_source_url: $("sgSourceUrl").value.trim() || null,
+      p_contributor: $("sgName").value.trim() || null
+    });
+    if (error) throw error;
+    alert("投稿ありがとうございます!管理者の承認後に出題されます🚀");
+    ["sgQuestion","sgC0","sgC1","sgC2","sgC3","sgExplanation","sgSourceTitle","sgSourceUrl","sgName"]
+      .forEach(id => $(id).value = "");
+    backToStart();
+  } catch (e) {
+    console.error(e);
+    showError("投稿に失敗しました。入力内容をご確認ください。");
+  } finally {
+    $("sgSubmit").disabled = false;
+  }
+}
+</script>
+</body>
+</html>
