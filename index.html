@@ -264,7 +264,7 @@
   <div id="screen-suggest" class="card hidden">
     <h2 class="section">💡 クイズを投稿する</h2>
     <p style="font-size:.8rem; color:var(--sub); margin-bottom:14px;">
-      投稿されたクイズは管理者の承認後に出題されます。出典が確認できる問題を歓迎します!
+      投稿されたクイズは、内容の確認後に出題されます。出典が確認できる問題を歓迎します!
     </p>
     <label>テーマ</label>
     <select id="sgTheme"></select>
@@ -559,7 +559,7 @@ async function submitSuggestion() {
       p_contributor: $("sgName").value.trim() || null
     });
     if (error) throw error;
-    alert("投稿ありがとうございます!管理者の承認後に出題されます🚀");
+    alert("投稿ありがとうございます!内容の確認後に出題されます🚀");
     ["sgQuestion","sgC0","sgC1","sgC2","sgC3","sgExplanation","sgSourceTitle","sgSourceUrl","sgName"]
       .forEach(id => $(id).value = "");
     backToStart();
