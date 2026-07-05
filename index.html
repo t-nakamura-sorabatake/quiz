@@ -5,110 +5,197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>宇宙ビジネスクイズ</title>
 <meta name="description" content="宇宙ビジネスの知識を50問のクイズでテスト!あなたの宇宙ビジネス偏差値と称号を判定します。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
   :root {
-    --bg: #0a0e1a;
-    --panel: #141a2e;
-    --panel2: #1c2440;
-    --accent: #4f8ef7;
-    --accent2: #f7b84f;
-    --text: #e8ecf5;
-    --sub: #8a93ad;
-    --ok: #3ecf8e;
-    --ng: #f75f5f;
+    /* 宙畑カラーパレット */
+    --brand: #00a6c2;        /* メインのティール */
+    --brand-dark: #008aa1;
+    --deep: #2350a0;         /* ディープブルー */
+    --yellow: #fced80;       /* マーカーイエロー */
+    --yellow-deep: #ffd50b;
+    --mute: #89aeb5;         /* くすみティール */
+    --bg: #f7f5f5;
+    --card: #ffffff;
+    --text: #333;
+    --sub: #999;
+    --ok: #00a6c2;
+    --ok-bg: #e5f6f9;
+    --ng: #ff5a52;
+    --ng-bg: #ffefee;
+    --line: #e6e6e6;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
     background: var(--bg);
-    background-image: radial-gradient(1px 1px at 20% 30%, #fff8 0, transparent 100%),
-      radial-gradient(1px 1px at 70% 60%, #fff6 0, transparent 100%),
-      radial-gradient(1.5px 1.5px at 40% 80%, #fff7 0, transparent 100%),
-      radial-gradient(1px 1px at 85% 15%, #fff5 0, transparent 100%),
-      radial-gradient(1px 1px at 10% 70%, #fff6 0, transparent 100%);
+    background-image: radial-gradient(#00a6c218 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
     color: var(--text);
     min-height: 100vh;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 60px; }
-  h1 { font-size: 1.5rem; text-align: center; margin-bottom: 4px; }
-  .tagline { text-align: center; color: var(--sub); font-size: .85rem; margin-bottom: 24px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* ===== ヒーローヘッダー ===== */
+  .hero {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--deep) 100%);
+    background-image:
+      radial-gradient(1.5px 1.5px at 18% 30%, #ffffffcc 0, transparent 100%),
+      radial-gradient(1px 1px at 65% 20%, #ffffff99 0, transparent 100%),
+      radial-gradient(2px 2px at 82% 65%, #ffffffbb 0, transparent 100%),
+      radial-gradient(1px 1px at 38% 75%, #ffffff88 0, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 25%, #ffffffaa 0, transparent 100%),
+      linear-gradient(135deg, var(--brand) 0%, var(--deep) 100%);
+    border-radius: 18px;
+    padding: 26px 20px 22px;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(35, 80, 160, .25);
+  }
+  .hero .rocket { font-size: 2.2rem; display: inline-block; animation: floaty 3s ease-in-out infinite; }
+  @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-8px) rotate(8deg); } }
+  h1 { font-size: 1.45rem; font-weight: 900; letter-spacing: .02em; margin-top: 2px; }
+  h1 .marker { background: linear-gradient(transparent 62%, var(--yellow) 62%); padding: 0 2px; color: #fff;
+               background: none; border-bottom: 4px solid var(--yellow); }
+  .tagline { font-size: .85rem; opacity: .9; margin-top: 6px; }
+
   .card {
-    background: var(--panel);
-    border: 1px solid #2a3355;
-    border-radius: 14px;
+    background: var(--card);
+    border-radius: 16px;
     padding: 24px;
     margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
   }
   .btn {
     display: inline-block; width: 100%;
-    background: var(--accent); color: #fff;
-    border: none; border-radius: 10px;
-    padding: 14px 18px; font-size: 1rem; font-weight: bold;
-    cursor: pointer; transition: opacity .15s;
+    background: var(--brand); color: #fff;
+    border: none; border-radius: 999px;
+    padding: 14px 18px; font-size: 1rem; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer; transition: transform .1s, background .15s, box-shadow .15s;
     text-align: center; text-decoration: none;
+    box-shadow: 0 3px 0 var(--brand-dark);
   }
-  .btn:hover { opacity: .85; }
-  .btn.sub { background: var(--panel2); color: var(--text); border: 1px solid #3a4570; }
-  .btn.small { width: auto; padding: 8px 16px; font-size: .85rem; }
+  .btn:hover { background: var(--brand-dark); transform: translateY(1px); box-shadow: 0 2px 0 var(--brand-dark); }
+  .btn.sub { background: #fff; color: var(--brand); border: 2px solid var(--brand); box-shadow: none; }
+  .btn.sub:hover { background: var(--ok-bg); }
+  .btn.dark { background: #000; box-shadow: 0 3px 0 #333; }
+  .btn.dark:hover { background: #222; }
   .btn:disabled { opacity: .4; cursor: default; }
   input[type=text], select, textarea {
-    width: 100%; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid #3a4570; background: var(--panel2);
+    width: 100%; padding: 11px 14px; border-radius: 10px;
+    border: 2px solid var(--line); background: #fff;
     color: var(--text); font-size: 1rem; margin-bottom: 12px;
+    font-family: inherit;
   }
-  label { display: block; font-size: .8rem; color: var(--sub); margin-bottom: 4px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
+  label { display: block; font-size: .8rem; color: var(--mute); font-weight: 700; margin-bottom: 4px; }
   .hidden { display: none !important; }
 
-  /* quiz */
-  .progress-bar { height: 6px; background: var(--panel2); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
-  .qmeta { display: flex; justify-content: space-between; font-size: .8rem; color: var(--sub); margin-bottom: 14px; }
-  .theme-badge { background: var(--panel2); border: 1px solid #3a4570; border-radius: 20px; padding: 2px 12px; }
-  .qtext { font-size: 1.05rem; line-height: 1.7; margin-bottom: 18px; font-weight: bold; }
+  /* ===== クイズ画面 ===== */
+  .progress-bar { height: 10px; background: #eef3f4; border-radius: 999px; margin-bottom: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--deep)); width: 0; transition: width .3s; border-radius: 999px; }
+  .qmeta { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: var(--sub); margin-bottom: 14px; }
+  .qnum { font-family: "Exo 2", sans-serif; font-weight: 800; color: var(--brand); font-size: .95rem; }
+  .theme-badge { background: var(--yellow); color: #333; font-weight: 700; border-radius: 999px; padding: 3px 14px; }
+  .qtext { font-size: 1.05rem; line-height: 1.7; margin-bottom: 18px; font-weight: 700; }
   .choice {
     display: block; width: 100%; text-align: left;
-    background: var(--panel2); color: var(--text);
-    border: 1px solid #3a4570; border-radius: 10px;
+    background: #fff; color: var(--text);
+    border: 2px solid var(--line); border-radius: 12px;
     padding: 13px 16px; font-size: .95rem; margin-bottom: 10px;
-    cursor: pointer; transition: border-color .15s;
+    cursor: pointer; transition: border-color .15s, background .15s, transform .1s;
+    font-family: inherit;
   }
-  .choice:hover { border-color: var(--accent); }
-  .choice.correct { border-color: var(--ok); background: #16321f; }
-  .choice.wrong { border-color: var(--ng); background: #3a1a1a; }
+  .choice:hover:not(:disabled) { border-color: var(--brand); background: var(--ok-bg); transform: translateY(-1px); }
+  .choice.correct { border-color: var(--ok); background: var(--ok-bg); font-weight: 700; }
+  .choice.correct::after { content: " ⭕"; }
+  .choice.wrong { border-color: var(--ng); background: var(--ng-bg); }
+  .choice.wrong::after { content: " ❌"; }
   .choice:disabled { cursor: default; }
 
-  .verdict { font-size: 1.3rem; font-weight: bold; margin-bottom: 8px; }
+  .verdict { font-size: 1.4rem; font-weight: 900; margin: 4px 0 8px; }
   .verdict.ok { color: var(--ok); }
   .verdict.ng { color: var(--ng); }
-  .explanation { font-size: .9rem; line-height: 1.8; color: #c6cde0; margin-bottom: 10px; }
-  .source a { color: var(--accent); font-size: .85rem; }
-  .rate-row { display: flex; gap: 8px; align-items: center; margin: 14px 0; font-size: .85rem; color: var(--sub); flex-wrap: wrap; }
-  .rate-btn {
-    background: var(--panel2); border: 1px solid #3a4570; color: var(--text);
-    border-radius: 20px; padding: 6px 14px; cursor: pointer; font-size: .85rem;
+  .stat-chip {
+    display: inline-block; font-size: .78rem; color: var(--deep);
+    background: #eef3fb; border-radius: 999px; padding: 3px 12px; margin-bottom: 10px; font-weight: 700;
   }
-  .rate-btn.active { border-color: var(--accent2); color: var(--accent2); }
-  .stat-chip { font-size: .8rem; color: var(--sub); margin-bottom: 10px; }
+  .explanation { font-size: .9rem; line-height: 1.9; color: #555; margin-bottom: 10px;
+                 background: #fafafa; border-left: 4px solid var(--yellow-deep); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+  .source a { color: var(--brand); font-size: .85rem; font-weight: 700; }
+  .rate-row { display: flex; gap: 8px; align-items: center; margin: 16px 0; font-size: .85rem; color: var(--sub); flex-wrap: wrap; }
+  .rate-btn {
+    background: #fff; border: 2px solid var(--line); color: var(--text);
+    border-radius: 999px; padding: 6px 16px; cursor: pointer; font-size: .85rem; font-family: inherit; font-weight: 700;
+    transition: all .15s;
+  }
+  .rate-btn:hover { border-color: var(--yellow-deep); }
+  .rate-btn.active { border-color: var(--yellow-deep); background: var(--yellow); }
 
-  /* result */
-  .result-dev { font-size: 3.2rem; font-weight: bold; text-align: center; color: var(--accent2); }
-  .result-title { font-size: 1.5rem; font-weight: bold; text-align: center; margin: 6px 0 2px; }
-  .result-sub { text-align: center; color: var(--sub); font-size: .9rem; margin-bottom: 18px; }
-  .share-row { display: flex; flex-direction: column; gap: 10px; }
-  .theme-scores { font-size: .85rem; margin-top: 16px; }
-  .theme-scores div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #232c4d; }
+  /* ===== 結果画面 ===== */
+  .result-card { position: relative; overflow: hidden; text-align: center; padding: 30px 24px; }
+  .result-label {
+    font-family: "Exo 2", sans-serif; font-weight: 800; letter-spacing: .25em;
+    color: var(--brand); font-size: .9rem;
+  }
+  .result-lead { font-size: .9rem; color: var(--sub); margin-top: 10px; }
+  .result-dev {
+    font-family: "Exo 2", sans-serif; font-weight: 800;
+    font-size: 5rem; line-height: 1.15; color: var(--brand);
+    display: inline-block; padding: 0 10px;
+    border-bottom: 6px solid var(--yellow-deep);
+    animation: pop .5s cubic-bezier(.2, 1.6, .4, 1);
+  }
+  .result-dev small { font-size: 1.2rem; color: var(--mute); font-weight: 600; }
+  @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .result-title-emoji { font-size: 3rem; margin-top: 14px; animation: bounce 1s ease infinite alternate; display: inline-block; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+  .result-title { font-size: 1.6rem; font-weight: 900; margin: 2px 0 4px; color: var(--deep); }
+  .result-desc { font-size: .9rem; color: #555; line-height: 1.8; }
+  .result-stats {
+    display: flex; justify-content: center; gap: 10px; margin: 16px 0 6px; flex-wrap: wrap;
+  }
+  .stat-box {
+    background: #f4fafb; border-radius: 12px; padding: 10px 18px; min-width: 90px;
+  }
+  .stat-box .num { font-family: "Exo 2", sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--brand); }
+  .stat-box .lbl { font-size: .7rem; color: var(--sub); font-weight: 700; }
+  .share-row { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+
+  .theme-scores { font-size: .85rem; margin-top: 8px; text-align: left; }
+  .theme-scores h3 { font-size: .95rem; margin-bottom: 10px; border-bottom: 3px solid var(--yellow); display: inline-block; padding-bottom: 2px; }
+  .ts-row { margin-bottom: 10px; }
+  .ts-head { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .ts-head .sc { font-family: "Exo 2", sans-serif; font-weight: 700; color: var(--brand); }
+  .ts-bar { height: 8px; background: #eef3f4; border-radius: 999px; overflow: hidden; }
+  .ts-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--deep)); border-radius: 999px; transition: width .8s ease; }
+
+  /* 紙吹雪 */
+  .confetti { position: absolute; top: -14px; border-radius: 2px; opacity: .9; pointer-events: none;
+              animation: fall linear forwards; }
+  @keyframes fall {
+    to { transform: translateY(620px) rotate(720deg); opacity: 0; }
+  }
 
   footer { text-align: center; margin-top: 30px; font-size: .75rem; color: var(--sub); }
-  footer a { color: var(--sub); }
-  .error-box { background: #3a1a1a; border: 1px solid var(--ng); border-radius: 8px; padding: 12px; font-size: .85rem; margin-bottom: 12px; }
+  footer a { color: var(--mute); }
+  .error-box { background: var(--ng-bg); border: 2px solid var(--ng); color: #b3362f; border-radius: 10px; padding: 12px; font-size: .85rem; margin-bottom: 12px; }
+  h2.section { font-size: 1.1rem; margin-bottom: 14px; border-bottom: 3px solid var(--yellow); display: inline-block; padding-bottom: 2px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🚀 宇宙ビジネス偏差値クイズ</h1>
-  <p class="tagline">あなたの宇宙ビジネス力を偏差値で判定!</p>
+  <div class="hero">
+    <span class="rocket">🚀</span>
+    <h1>宇宙ビジネス<span class="marker">偏差値</span>クイズ</h1>
+    <p class="tagline">あなたの宇宙ビジネス力を偏差値で判定!</p>
+  </div>
 
   <div id="errorBox" class="error-box hidden"></div>
 
@@ -116,9 +203,9 @@
   <div id="screen-start" class="card">
     <label>ニックネーム(任意)</label>
     <input type="text" id="nickname" maxlength="20" placeholder="例: そらまめ">
-    <button class="btn" onclick="startQuiz(QUIZ_SIZE)">本気モードに挑戦(50問)</button>
+    <button class="btn" onclick="startQuiz(QUIZ_SIZE)">🔥 本気モードに挑戦(50問)</button>
     <div style="height:10px"></div>
-    <button class="btn sub" onclick="startQuiz(TRIAL_SIZE)">お試しモード(10問)</button>
+    <button class="btn sub" onclick="startQuiz(TRIAL_SIZE)">🌱 お試しモード(10問)</button>
     <div style="height:20px"></div>
     <button class="btn sub" onclick="showSuggest()">💡 クイズを投稿する</button>
   </div>
@@ -127,7 +214,7 @@
   <div id="screen-quiz" class="card hidden">
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <div class="qmeta">
-      <span id="qNum"></span>
+      <span class="qnum" id="qNum"></span>
       <span class="theme-badge" id="qTheme"></span>
     </div>
     <p class="qtext" id="qText"></p>
@@ -135,7 +222,7 @@
 
     <div id="reveal" class="hidden">
       <p class="verdict" id="verdict"></p>
-      <p class="stat-chip" id="rateChip"></p>
+      <div><span class="stat-chip" id="rateChip"></span></div>
       <p class="explanation" id="qExplanation"></p>
       <p class="source" id="qSource"></p>
       <div class="rate-row">
@@ -148,23 +235,34 @@
   </div>
 
   <!-- ===== 結果画面 ===== -->
-  <div id="screen-result" class="card hidden">
-    <p class="result-sub">あなたの宇宙ビジネス偏差値は…</p>
-    <p class="result-dev" id="resultDev"></p>
+  <div id="screen-result" class="card result-card hidden">
+    <div id="confettiBox"></div>
+    <p class="result-label">— RESULT —</p>
+    <p class="result-lead">あなたの宇宙ビジネス偏差値は…</p>
+    <div><span class="result-dev" id="resultDev"></span></div>
+    <div class="result-title-emoji" id="resultEmoji"></div>
     <p class="result-title" id="resultTitle"></p>
-    <p class="result-sub" id="resultDetail"></p>
+    <p class="result-desc" id="resultDesc"></p>
+    <div class="result-stats">
+      <div class="stat-box"><div class="num" id="statScore"></div><div class="lbl">正解数</div></div>
+      <div class="stat-box"><div class="num" id="statRank"></div><div class="lbl">現在の順位</div></div>
+      <div class="stat-box"><div class="num" id="statPeople"></div><div class="lbl">挑戦者数</div></div>
+    </div>
     <div class="share-row">
-      <a class="btn" id="shareX" target="_blank" rel="noopener">𝕏 で結果をシェア</a>
+      <a class="btn dark" id="shareX" target="_blank" rel="noopener">𝕏 で結果をシェア</a>
       <button class="btn sub" id="shareNative" onclick="nativeShare()">📤 その他の方法でシェア</button>
       <button class="btn sub" onclick="location.reload()">🔁 もう一度挑戦</button>
       <button class="btn sub" onclick="showSuggest()">💡 クイズを投稿する</button>
     </div>
-    <div class="theme-scores" id="themeScores"></div>
+    <div class="theme-scores">
+      <h3>📊 テーマ別成績</h3>
+      <div id="themeScores"></div>
+    </div>
   </div>
 
   <!-- ===== クイズ投稿画面 ===== -->
   <div id="screen-suggest" class="card hidden">
-    <h2 style="font-size:1.1rem; margin-bottom:14px;">💡 クイズを投稿する</h2>
+    <h2 class="section">💡 クイズを投稿する</h2>
     <p style="font-size:.8rem; color:var(--sub); margin-bottom:14px;">
       投稿されたクイズは管理者の承認後に出題されます。出典が確認できる問題を歓迎します!
     </p>
@@ -271,7 +369,7 @@ function renderQuestion() {
   const q = questions[current];
   ratedThis = false;
   $("progressFill").style.width = (100 * current / questions.length) + "%";
-  $("qNum").textContent = `第 ${current + 1} 問 / ${questions.length} 問`;
+  $("qNum").textContent = `Q${current + 1} / ${questions.length}`;
   $("qTheme").textContent = q.theme_name;
   $("qText").textContent = q.question;
   $("reveal").classList.add("hidden");
@@ -348,6 +446,26 @@ function nextQuestion() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// ===== 紙吹雪(宙畑カラー) =====
+function launchConfetti() {
+  const colors = ["#00a6c2", "#fced80", "#ffd50b", "#2350a0", "#ff5a52", "#89aeb5"];
+  const box = $("confettiBox");
+  box.innerHTML = "";
+  for (let i = 0; i < 36; i++) {
+    const c = document.createElement("span");
+    c.className = "confetti";
+    const size = 6 + Math.random() * 8;
+    c.style.left = Math.random() * 100 + "%";
+    c.style.width = size + "px";
+    c.style.height = size * (0.6 + Math.random() * 0.8) + "px";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2.2 + Math.random() * 2.5) + "s";
+    c.style.animationDelay = (Math.random() * 1.2) + "s";
+    box.appendChild(c);
+  }
+  setTimeout(() => { box.innerHTML = ""; }, 6500);
+}
+
 // ===== 結果 =====
 let lastResult = null;
 async function finishQuiz() {
@@ -357,19 +475,27 @@ async function finishQuiz() {
     lastResult = data;
     const title = getTitle(data.deviation);
     $("resultDev").textContent = data.deviation;
-    $("resultTitle").textContent = `${title.emoji} ${title.name}`;
-    $("resultDetail").innerHTML =
-      `${data.total}問中 <b>${data.score}問</b> 正解<br>` +
-      `${title.desc}<br>` +
-      `(現在 ${data.participants}人中 ${data.rank}位)`;
+    $("resultEmoji").textContent = title.emoji;
+    $("resultTitle").textContent = title.name;
+    $("resultDesc").textContent = title.desc;
+    $("statScore").textContent = `${data.score}/${data.total}`;
+    $("statRank").textContent = `${data.rank}位`;
+    $("statPeople").textContent = `${data.participants}人`;
 
-    // テーマ別成績
+    // テーマ別成績(バー付き)
     const ts = $("themeScores");
-    ts.innerHTML = "<b>テーマ別成績</b>";
+    ts.innerHTML = "";
     Object.entries(themeResult).forEach(([name, r]) => {
+      const pct = r.total > 0 ? Math.round(100 * r.correct / r.total) : 0;
       const row = document.createElement("div");
-      row.innerHTML = `<span>${name}</span><span>${r.correct} / ${r.total}</span>`;
+      row.className = "ts-row";
+      row.innerHTML =
+        `<div class="ts-head"><span>${name}</span><span class="sc">${r.correct}/${r.total}</span></div>` +
+        `<div class="ts-bar"><div class="ts-fill" style="width:0%"></div></div>`;
       ts.appendChild(row);
+      requestAnimationFrame(() => {
+        setTimeout(() => { row.querySelector(".ts-fill").style.width = pct + "%"; }, 100);
+      });
     });
 
     // シェア文面
@@ -377,6 +503,7 @@ async function finishQuiz() {
     $("shareX").href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE_URL)}`;
     show("screen-result");
     window.scrollTo({ top: 0 });
+    launchConfetti();
   } catch (e) {
     console.error(e);
     showError("結果の集計に失敗しました。");
