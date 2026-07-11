@@ -8,5 +8,5 @@ const QUIZ_SIZE = 50;
 // お試しモードの出題数
 const TRIAL_SIZE = 10;
 // サイト公開URL(シェア文面に使用。GitHub Pages のURLに変更してください)
-const SITE_URL = "https://YOUR-GITHUB-ID.github.io/YOUR-REPO/";
+const SITE_URL = "https://t-nakamura-sorabatake.github.io/quiz/";
 
