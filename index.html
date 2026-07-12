@@ -539,19 +539,8 @@ async function nativeShare() {
 }
 
 // ===== クイズ投稿 =====
-async function showSuggest() {
+function showSuggest() {
   show("screen-suggest");
-  const sel = $("sgTheme");
-  if (sel.options.length === 0) {
-    const { data, error } = await sb.from("themes").select("*").order("sort_order");
-    if (!error && data) {
-      data.forEach(t => {
-        const o = document.createElement("option");
-        o.value = t.id; o.textContent = t.name;
-        sel.appendChild(o);
-      });
-    }
-  }
 }
 
 function backToStart() { show("screen-start"); }
